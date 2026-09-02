@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'devops-2tier-app'
+        IMAGE_TAG  = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install & Test') {
+            agent {
+                docker {
+                    image 'node:20-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    npm ci
+                    node test.js
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker build -t ${IMAGE_NAME}:latest .
+                '''
+            }
+        }
+
+        stage('Verify Image') {
+            steps {
+                sh '''
+                    docker image inspect ${IMAGE_NAME}:${IMAGE_TAG} --format='Image ID: {{.Id}}'
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "CI build and test completed successfully for build #${env.BUILD_NUMBER}."
+        }
+        failure {
+            echo "Pipeline failed. Check stage console output."
+        }
+    }
+}
