@@ -1,14 +1,14 @@
 {
   "name": "devops-2tier-app",
   "version": "1.0.0",
-  "description": "2-tier Task API with Redis",
+  "description": "2-tier Node.js and PostgreSQL web application",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "test": "node test.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "redis": "^4.6.13"
+    "express": "^4.21.0",
+    "pg": "^8.13.0"
   }
 }
