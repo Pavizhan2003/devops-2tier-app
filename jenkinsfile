@@ -13,6 +13,15 @@ pipeline {
             }
         }
 
+        stage('Security Scan: Dependencies') {
+            steps {
+                sh '''
+                    echo "Scanning project source files and dependencies..."
+                    trivy fs --severity HIGH,CRITICAL --exit-code 0 .
+                '''
+            }
+        }
+
         stage('Install & Test') {
             agent {
                 docker {
@@ -37,6 +46,15 @@ pipeline {
             }
         }
 
+        stage('Security Scan: Docker Image') {
+            steps {
+                sh '''
+                    echo "Scanning built Docker image for CVEs..."
+                    trivy image --severity CRITICAL --exit-code 0 ${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+            }
+        }
+
         stage('Verify Image') {
             steps {
                 sh '''
@@ -51,10 +69,10 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "CI build and test completed successfully for build #${env.BUILD_NUMBER}."
+            echo "Pipeline passed: Build #${env.BUILD_NUMBER} built, tested, and scanned successfully."
         }
         failure {
-            echo "Pipeline failed. Check stage console output."
+            echo "Pipeline run failed. Inspect stage console output."
         }
     }
 }
